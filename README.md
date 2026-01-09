@@ -1,59 +1,103 @@
 # Web Application Security Scanners
 
-A Node.js-based web application security scanner platform designed for modularity, performance, and deterministic scanning.
+Welcome! This is a simple tool to scan websites for security issues using Node.js.
 
-## Features
+## Fast Setup
 
-- **Modular Scanners**: Easily extensible architecture for adding new security checks.
-- **Scan-Scoped Memory**: SQLite-based persistent memory ensuring efficient deduplication within a single scan context.
-- **Expired Library / Domain Scanner**: Detects "Broken Link Hijacking" vulnerabilities by identifying dead domains referenced in external scripts.
-- **Minimal Dependencies**: Built with performance in mind, using `better-sqlite3` for fast, embedded storage.
-
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd was-scanners
-   ```
-
-2. Install dependencies:
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-## Usage
+2. **Run the Scanner**:
+   ```bash
+   node run.js
+   ```
 
-### Running a Scan
+---
 
-To run the scanners with the default test configuration:
+## Developer Guide: How to Build a New Scanner
 
-```bash
-node run.js
+This guide is written for developers of all levels. We made it easy to add new security checks.
+
+### 1. The Basics
+Each scanner is just a **function**.
+- It takes a **Request** (what to scan).
+- It returns a list of **Findings** (vulnerabilities found).
+
+### 2. Using "Memory" (Stop Duplicate Work)
+We have a built-in memory system. This is very important! It makes sure we **don't scan the same URL twice** in the same run.
+
+You use it like this:
+1. **Check**: "Have I seen this before?" (`hasSeen`)
+2. **Store**: "Okay, I'm scanning it now, remember it." (`store`)
+
+### 3. Scanner Template (Copy & Paste)
+
+Create a new file (e.g., `my-new-scan.js`) and use this code:
+
+```javascript
+// 1. Import the Memory Helper
+const ScanMemory = require('./scan-memory.js');
+
+async function myNewScan({ request }) {
+    
+    // 2. Setup Memory (Copy this exact block)
+    let memory = null;
+    const { scanContext } = request || {};
+    if (scanContext && scanContext.scanId) {
+        memory = new ScanMemory({
+            scannerName: 'my-new-scan', // CHANGE THIS NAME
+            scanId: scanContext.scanId,
+            applicationId: scanContext.applicationId
+        });
+    }
+
+    // 3. Your Scanner Logic
+    const urlToCheck = "https://example.com"; // Get this from your request/response actually
+
+    // CHECK MEMORY: logic to skip duplicates
+    if (memory && memory.hasSeen(urlToCheck)) {
+        console.log(`Skipping ${urlToCheck}, already scanned.`);
+        return []; // Skip
+    }
+
+    // SAVE TO MEMORY: mark as seen
+    if (memory) {
+        memory.store(urlToCheck);
+    }
+
+    // 4. Do Your Security Check Here
+    // ... code to check for vulnerabilities ...
+    const isVulnerable = false; // logic result
+
+    // 5. Return Findings
+    if (isVulnerable) {
+        return [{
+            title: "My New Vulnerability",
+            severity: "high",
+            description: "Found a problem..."
+        }];
+    }
+
+    return []; // Return empty array if nothing found
+}
+
+module.exports = { myNewScan };
 ```
 
-This will:
-1. Initialize a new scan context with a unique ID.
-2. Execute the `expired-library-scan.js` against the configured target.
-3. Log any findings and deduplication events.
+### 4. Add to Run Loop
+Open `run.js` and import your new file to run it.
 
-### Project Structure
+```javascript
+const { myNewScan } = require('./my-new-scan.js');
 
-- `expired-library-scan.js`: Implementation of the broken link hijacking scanner.
-- `scan-memory.js`: SQLite-based memory module for deduplicating resources within a scan.
-- `run.js`: Entry point script to orchestrate scans and inject scan contexts.
-- `scanner.db`: Local SQLite database (created automatically) for storing scan state.
+// ... inside the execution block ...
+await myNewScan({ request: ... });
+```
 
-## Development
-
-### Adding a New Scanner
-
-1. Create a new scanner file (e.g., `my-new-scan.js`).
-2. Accept a `request` object containing `scanContext`.
-3. Initialize `ScanMemory` if needed for deduplication.
-4. Export the scanner function.
-5. Update `run.js` to include your new scanner.
-
-## License
-
-ISC
+## Project Files Explained
+- **`run.js`**: The main script that starts everything. It creates the "Scan ID".
+- **`scan-memory.js`**: The helper that handles saving/checking duplicates.
+- **`expired-library-scan.js`**: An example scanner that checks for dead links.
+- **`scanner.db`**: A file created automatically to save your scan progress.
