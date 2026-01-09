@@ -97,7 +97,11 @@ await myNewScan({ request: ... });
 ```
 
 ## Project Files Explained
-- **`run.js`**: The main script that starts everything. It creates the "Scan ID".
-- **`scan-memory.js`**: The helper that handles saving/checking duplicates.
-- **`expired-library-scan.js`**: An example scanner that checks for dead links.
-- **`scanner.db`**: A file created automatically to save your scan progress.
+### Project Structure
+
+- `scanners/`
+  - `expired-library/index.js`: Default scanner for broken link hijacking.
+- `scanner-template.js`: Template for creating new scanners.
+- `scan-memory.js`: deduplication module.
+- `run.js`: Entry point script.
+- `scanner.db`: Local database.

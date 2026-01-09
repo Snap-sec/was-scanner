@@ -119,7 +119,7 @@ async function expiredLibraryScan({ request, response } = {}) {
     const { scanContext } = request || {};
 
     if (scanContext && scanContext.scanId && scanContext.applicationId) {
-        const ScanMemory = require('./scan-memory.js');
+        const ScanMemory = require('../../scan-memory.js');
         memory = new ScanMemory({
             scannerName: 'expired-library',
             scanId: scanContext.scanId,

@@ -45,8 +45,10 @@ Use these specific prefixes for log readability:
 ## 4. File Structure
 - `run.js`: Orchestrator (edit this to add new scanners to the run loop).
 - `scan-memory.js`: The persistence layer.
+- `scanner-template.js`: Copy this to start a new scanner.
+- `scanners/`: Directory containing all scanner implementations.
+  - `expired-library/index.js`: Default scanner.
 - `scanner.db`: The local database (ignored in git).
-- `*.js`: Scanner implementations.
 
 ## 5. Do Not
 - Do not introduce Global state outside of `ScanMemory`.

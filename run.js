@@ -1,9 +1,9 @@
-const { expiredLibraryScan } = require('./expired-library-scan.js');
+const { expiredLibraryScan } = require('./scanners/expired-library/index.js');
 const crypto = require('crypto');
 
 // Create a unique scan context
 const scanContext = {
-    scanId: '12345',
+    scanId: '22222',
     applicationId: 'app_test_001'
 };
 
