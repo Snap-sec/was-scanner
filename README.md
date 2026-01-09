@@ -37,53 +37,101 @@ You use it like this:
 Create a new file (e.g., `my-new-scan.js`) and use this code:
 
 ```javascript
-// 1. Import the Memory Helper
-const ScanMemory = require('./scan-memory.js');
+/**
+ * Scanner Template (scanners/<scanner-name>/index.js)
+ */
 
-async function myNewScan({ request }) {
-    
-    // 2. Setup Memory (Copy this exact block)
+const ScanMemory = require('../../scan-memory.js');
+
+async function myScannerName({ request, response }) {
+
+    // Default Request Object (based on RawRequest model)
+    const defaultRequest = {
+        method: "GET",
+        url: "https://example.com/api/v1/users",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token123",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        },
+        params: {
+            "id": "123",
+            "include": "profile"
+        },
+        body: null,
+        mode: "raw",
+        body_format: "json",
+        rawHttp: "GET /api/v1/users?id=123&include=profile HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nAuthorization: Bearer token123\r\n\r\n",
+        source: "crawler",
+        orgId: "org_123",
+        projectIds: ["project_456"]
+    };
+
+    // Default Response Object
+    const defaultResponse = {
+        status: 200,
+        statusText: "OK",
+        headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+            "Server": "nginx",
+            "X-Powered-By": "Express"
+        },
+        body: {
+            content: JSON.stringify({
+                status: "success",
+                data: {
+                    id: 123,
+                    username: "testuser",
+                    email: "test@example.com"
+                }
+            }),
+            mode: "raw",
+            format: "json"
+        },
+        size: 1024,
+        time: 150 // response time in ms
+    };
+
+    // Use provided request/response or defaults
+    const req = request || defaultRequest;
+    const res = response || defaultResponse;
+
+    // --- MEMORY IMPLEMENTATION ---
     let memory = null;
     const { scanContext } = request || {};
-    if (scanContext && scanContext.scanId) {
+    
+    // Initialize memory if context is present
+    if (scanContext && scanContext.scanId && scanContext.applicationId) {
         memory = new ScanMemory({
-            scannerName: 'my-new-scan', // CHANGE THIS NAME
+            scannerName: 'my-scanner-name',
             scanId: scanContext.scanId,
             applicationId: scanContext.applicationId
         });
     }
 
-    // 3. Your Scanner Logic
-    const urlToCheck = "https://example.com"; // Get this from your request/response actually
-
-    // CHECK MEMORY: logic to skip duplicates
-    if (memory && memory.hasSeen(urlToCheck)) {
-        console.log(`Skipping ${urlToCheck}, already scanned.`);
-        return []; // Skip
+    // Deduplicate on unique key (e.g. req.url)
+    if (memory && memory.hasSeen(req.url)) {
+        console.log(`[~] Skipping duplicate: ${req.url}`);
+        return null; 
     }
-
-    // SAVE TO MEMORY: mark as seen
     if (memory) {
-        memory.store(urlToCheck);
+        memory.store(req.url);
     }
+    // ----------------------------
 
-    // 4. Do Your Security Check Here
-    // ... code to check for vulnerabilities ...
-    const isVulnerable = false; // logic result
+    // do your scanning logic here
+    
+    const vuln = {
+        title: "Example Vulnerability",
+        severity: "high",
+        description: "..."
+    };
 
-    // 5. Return Findings
-    if (isVulnerable) {
-        return [{
-            title: "My New Vulnerability",
-            severity: "high",
-            description: "Found a problem..."
-        }];
-    }
-
-    return []; // Return empty array if nothing found
+    return vuln;
 }
 
-module.exports = { myNewScan };
+module.exports = { myScannerName };
 ```
 
 ### 4. Add to Run Loop
