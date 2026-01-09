@@ -1,0 +1,20 @@
+We will be writing code for our web application scanner tool. 
+Your Job is to write simple code for each scanner. 
+The code should be as following:
+
+- Simple code 
+- Easy to understand
+- Functional Programming
+- Proper Short Comments 
+
+
+
+Each script should have proper but not too many logging statements to show progress of the scanner.
+
+Example :
+
+Use [!] for errors 
+Use [~] for successful results
+Use [*] for warnings
+
+
